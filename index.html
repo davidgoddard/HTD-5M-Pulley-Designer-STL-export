@@ -395,7 +395,7 @@
       floorRadius: 0.43,
       samplesPerTooth: 18,
       flangeEnabled: true,
-      upperFlangeEnabled: false,
+      upperFlangeEnabled: true,
       printFriendlyFlanges: true,
       flangeExtra: 2.25,
       flangeThickness: 4.5,
@@ -870,7 +870,7 @@
         warnings.push("Square upper flanges create unsupported shelves over the tooth grooves. Prusa may report floating bridge anchors; use print-friendly taper or supports.");
       }
       if (!state.upperFlangeEnabled) {
-        warnings.push("Upper flange is off to avoid Prusa's floating-bridge warning. Use supports, a separately printed top flange, or enable the upper flange if you need belt retention on both sides.");
+        warnings.push("Upper flange is off. Enable it if you need belt retention on both sides, or print a separate top flange/ring.");
       }
 
       const box = document.getElementById("warningBox");
