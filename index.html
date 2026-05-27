@@ -366,8 +366,9 @@
             <h2>Manufacturing note</h2>
             <p>
               This app generates the groove from tangential arc geometry using OD offset, groove depth, plunge radius,
-              and floor/corner radius rather than a percentage-width slot. It is still not a certified manufacturer
-              profile unless those dimensions match the exact belt maker's published data and tolerances.
+              and floor/corner radius rather than a percentage-width slot. The lower flange is square because it prints
+              from the bed without bridging; only the optional upper flange uses the print-friendly taper. It is still not
+              a certified manufacturer profile unless those dimensions match the exact belt maker's published data and tolerances.
             </p>
           </div>
 
@@ -668,17 +669,10 @@
         const bodyCapEnd = !hasUpperFlange;
 
         if (hasLowerFlange) {
-          if (settings.printFriendlyFlanges) {
-            // Lower flange prints as a foundation and tapers inward as it rises.
-            const leftTaperOuter = (theta, z) => {
-              const t = clamp((z - zMin) / Math.max(1e-9, lowerFlangeThickness), 0, 1);
-              return flangeRadius + (profileRadius(theta) - flangeRadius) * t;
-            };
-            addTube(mesh, boreRadius, leftTaperOuter, zMin, zFace0, segments, "lower tapered flange", true, false);
-          } else {
-            addTube(mesh, boreRadius, flangeOuter, zMin, zFace0, segments, "lower square flange", true, false);
-            addOuterAnnulus(mesh, profileRadius, flangeOuter, zFace0, segments, true);
-          }
+          // The lower flange is printed from the bed upward, so it does not need a full cone taper.
+          // A square lower flange keeps the pulley geometry compact and avoids the exaggerated sloped side.
+          addTube(mesh, boreRadius, flangeOuter, zMin, zFace0, segments, "lower square flange", true, false);
+          addOuterAnnulus(mesh, profileRadius, flangeOuter, zFace0, segments, true);
         }
 
         addTube(mesh, boreRadius, profileRadius, zFace0, zFace1, segments, "toothed pulley body", bodyCapStart, bodyCapEnd);
@@ -851,7 +845,7 @@
         ["Arc angles", stats.arcAngles],
         ["Flange diameter", (state.flangeEnabled || state.upperFlangeEnabled) ? mm(stats.flangeDiameter) : "None"],
         ["Max flange overhang", (state.flangeEnabled || state.upperFlangeEnabled) ? mm(stats.maxFlangeOverhang) : "None"],
-        ["Flange mode", (state.flangeEnabled || state.upperFlangeEnabled) ? ((state.flangeEnabled && state.upperFlangeEnabled ? "Double" : state.flangeEnabled ? "Lower only" : "Upper only") + " / " + (state.printFriendlyFlanges ? "tapered" : "square")) : "None"],
+        ["Flange mode", (state.flangeEnabled || state.upperFlangeEnabled) ? ((state.flangeEnabled && state.upperFlangeEnabled ? "Double" : state.flangeEnabled ? "Lower only" : "Upper only") + " / lower square" + (state.upperFlangeEnabled ? (state.printFriendlyFlanges ? ", upper tapered" : ", upper square") : "")) : "None"],
         ["Total length", mm(stats.totalLength)],
         ["Vertices", mesh.vertices.length.toLocaleString()],
         ["Triangles", mesh.faces.length.toLocaleString()]
