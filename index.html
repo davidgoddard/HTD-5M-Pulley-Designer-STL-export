@@ -321,7 +321,11 @@
               <div style="display: grid; gap: 10px; justify-items: end;">
                 <label class="check">
                   <input id="flangeEnabled" type="checkbox" />
-                  Flanges
+                  Lower flange
+                </label>
+                <label class="check">
+                  <input id="upperFlangeEnabled" type="checkbox" />
+                  Upper flange
                 </label>
                 <label class="check">
                   <input id="printFriendlyFlanges" type="checkbox" />
@@ -390,6 +394,7 @@
       floorRadius: 0.43,
       samplesPerTooth: 18,
       flangeEnabled: true,
+      upperFlangeEnabled: false,
       printFriendlyFlanges: true,
       flangeExtra: 2.25,
       flangeThickness: 4.5,
@@ -643,39 +648,54 @@
       const outsideDiameter = pitchDiameter - settings.odOffset;
       const outsideRadius = outsideDiameter / 2;
       const rootRadius = outsideRadius - settings.grooveDepth;
-      const flangeThickness = settings.flangeEnabled ? Math.max(0.2, settings.flangeThickness) : 0;
+      const hasLowerFlange = !!settings.flangeEnabled;
+      const hasUpperFlange = !!settings.upperFlangeEnabled;
+      const flangeThickness = (hasLowerFlange || hasUpperFlange) ? Math.max(0.2, settings.flangeThickness) : 0;
+      const lowerFlangeThickness = hasLowerFlange ? flangeThickness : 0;
+      const upperFlangeThickness = hasUpperFlange ? flangeThickness : 0;
       const flangeRadius = Math.max(outsideRadius + 0.2, (outsideDiameter + settings.flangeExtra * 2) / 2);
       const zFace0 = -width / 2;
       const zFace1 = width / 2;
-      const zMin = zFace0 - flangeThickness;
-      const zMax = zFace1 + flangeThickness;
+      const zMin = zFace0 - lowerFlangeThickness;
+      const zMax = zFace1 + upperFlangeThickness;
       const mesh = { vertices: [], faces: [], parts: [] };
       const toothProfile = buildHTDArcProfile({ ...settings, teeth });
       const profileRadius = theta => htd5mArcGrooveRadius(theta, { ...settings, teeth }, toothProfile);
       const flangeOuter = () => flangeRadius;
 
-      if (settings.flangeEnabled && settings.printFriendlyFlanges) {
-        // Print-friendly flanges avoid the unsupported horizontal shelf above the teeth.
-        // The lower flange tapers inward as it rises; the upper flange tapers outward as it rises.
-        // For FDM, keep flangeThickness roughly equal to or greater than the max radial overhang.
-        const leftTaperOuter = (theta, z) => {
-          const t = clamp((z - zMin) / Math.max(1e-9, flangeThickness), 0, 1);
-          return flangeRadius + (profileRadius(theta) - flangeRadius) * t;
-        };
-        const rightTaperOuter = (theta, z) => {
-          const t = clamp((z - zFace1) / Math.max(1e-9, flangeThickness), 0, 1);
-          return profileRadius(theta) + (flangeRadius - profileRadius(theta)) * t;
-        };
+      if (hasLowerFlange || hasUpperFlange) {
+        const bodyCapStart = !hasLowerFlange;
+        const bodyCapEnd = !hasUpperFlange;
 
-        addTube(mesh, boreRadius, leftTaperOuter, zMin, zFace0, segments, "left tapered flange", true, false);
-        addTube(mesh, boreRadius, profileRadius, zFace0, zFace1, segments, "toothed pulley body", false, false);
-        addTube(mesh, boreRadius, rightTaperOuter, zFace1, zMax, segments, "right tapered flange", false, true);
-      } else if (settings.flangeEnabled) {
-        addTube(mesh, boreRadius, flangeOuter, zMin, zFace0, segments, "left flange", true, false);
-        addTube(mesh, boreRadius, profileRadius, zFace0, zFace1, segments, "toothed pulley body", false, false);
-        addTube(mesh, boreRadius, flangeOuter, zFace1, zMax, segments, "right flange", false, true);
-        addOuterAnnulus(mesh, profileRadius, flangeOuter, zFace0, segments, true);
-        addOuterAnnulus(mesh, profileRadius, flangeOuter, zFace1, segments, false);
+        if (hasLowerFlange) {
+          if (settings.printFriendlyFlanges) {
+            // Lower flange prints as a foundation and tapers inward as it rises.
+            const leftTaperOuter = (theta, z) => {
+              const t = clamp((z - zMin) / Math.max(1e-9, lowerFlangeThickness), 0, 1);
+              return flangeRadius + (profileRadius(theta) - flangeRadius) * t;
+            };
+            addTube(mesh, boreRadius, leftTaperOuter, zMin, zFace0, segments, "lower tapered flange", true, false);
+          } else {
+            addTube(mesh, boreRadius, flangeOuter, zMin, zFace0, segments, "lower square flange", true, false);
+            addOuterAnnulus(mesh, profileRadius, flangeOuter, zFace0, segments, true);
+          }
+        }
+
+        addTube(mesh, boreRadius, profileRadius, zFace0, zFace1, segments, "toothed pulley body", bodyCapStart, bodyCapEnd);
+
+        if (hasUpperFlange) {
+          if (settings.printFriendlyFlanges) {
+            // Upper flange grows outward gradually. This is better than a shelf, but Prusa may still warn.
+            const rightTaperOuter = (theta, z) => {
+              const t = clamp((z - zFace1) / Math.max(1e-9, upperFlangeThickness), 0, 1);
+              return profileRadius(theta) + (flangeRadius - profileRadius(theta)) * t;
+            };
+            addTube(mesh, boreRadius, rightTaperOuter, zFace1, zMax, segments, "upper tapered flange", false, true);
+          } else {
+            addTube(mesh, boreRadius, flangeOuter, zFace1, zMax, segments, "upper square flange", false, true);
+            addOuterAnnulus(mesh, profileRadius, flangeOuter, zFace1, segments, false);
+          }
+        }
       } else {
         addTube(mesh, boreRadius, profileRadius, zFace0, zFace1, segments, "toothed pulley body");
       }
@@ -698,7 +718,7 @@
           outsideDiameter,
           rootDiameter: rootRadius * 2,
           flangeDiameter: flangeRadius * 2,
-          totalLength: width + flangeThickness * 2 + bossExtension * 2,
+          totalLength: width + lowerFlangeThickness + upperFlangeThickness + bossExtension * 2,
           maxFlangeOverhang: Math.max(0, flangeRadius - rootRadius),
           halfGrooveWidth: toothProfile.halfGrooveWidth,
           grooveTopWidth: toothProfile.halfGrooveWidth * 2,
@@ -775,6 +795,13 @@
         render();
       });
 
+      const upperFlangeCheckbox = document.getElementById("upperFlangeEnabled");
+      upperFlangeCheckbox.checked = state.upperFlangeEnabled;
+      upperFlangeCheckbox.addEventListener("change", () => {
+        state.upperFlangeEnabled = upperFlangeCheckbox.checked;
+        render();
+      });
+
       const printFriendlyCheckbox = document.getElementById("printFriendlyFlanges");
       printFriendlyCheckbox.checked = state.printFriendlyFlanges;
       printFriendlyCheckbox.addEventListener("change", () => {
@@ -803,7 +830,7 @@
       }
 
       const flangePreview = document.getElementById("flangePreview");
-      flangePreview.style.display = state.flangeEnabled ? "block" : "none";
+      flangePreview.style.display = (state.flangeEnabled || state.upperFlangeEnabled) ? "block" : "none";
       flangePreview.setAttribute("r", String((stats.flangeDiameter / 2) * scale));
 
       document.getElementById("pulleyPreview").setAttribute("points", pts.join(" "));
@@ -822,9 +849,9 @@
         ["Tooth land width", mm(stats.toothLandWidth)],
         ["Arc radii", "R" + round(stats.plungeRadius, 2) + " / R" + round(stats.floorRadius, 2)],
         ["Arc angles", stats.arcAngles],
-        ["Flange diameter", state.flangeEnabled ? mm(stats.flangeDiameter) : "None"],
-        ["Max flange overhang", state.flangeEnabled ? mm(stats.maxFlangeOverhang) : "None"],
-        ["Flange mode", state.flangeEnabled ? (state.printFriendlyFlanges ? "Tapered / print-friendly" : "Square shoulder") : "None"],
+        ["Flange diameter", (state.flangeEnabled || state.upperFlangeEnabled) ? mm(stats.flangeDiameter) : "None"],
+        ["Max flange overhang", (state.flangeEnabled || state.upperFlangeEnabled) ? mm(stats.maxFlangeOverhang) : "None"],
+        ["Flange mode", (state.flangeEnabled || state.upperFlangeEnabled) ? ((state.flangeEnabled && state.upperFlangeEnabled ? "Double" : state.flangeEnabled ? "Lower only" : "Upper only") + " / " + (state.printFriendlyFlanges ? "tapered" : "square")) : "None"],
         ["Total length", mm(stats.totalLength)],
         ["Vertices", mesh.vertices.length.toLocaleString()],
         ["Triangles", mesh.faces.length.toLocaleString()]
@@ -842,11 +869,14 @@
       if (state.grooveDepth > 2.25) warnings.push("Groove depth is above the common HTD 5M range. Check belt fit before printing functional parts.");
       if (state.plungeRadius <= state.grooveDepth / 2) warnings.push("Plunge radius must be greater than half the groove depth for a valid circular plunge arc.");
       if (state.bossExtension > 0 && state.bossDiameter >= stats.outsideDiameter) warnings.push("Boss diameter must stay below the pulley outside diameter; it has been ignored in the STL mesh.");
-      if (state.flangeEnabled && state.printFriendlyFlanges && state.flangeThickness < stats.maxFlangeOverhang) {
-        warnings.push("The top flange taper is still steeper than 45°. Increase flange thickness to about " + mm(stats.maxFlangeOverhang) + " or enable supports.");
+      if (state.upperFlangeEnabled && state.printFriendlyFlanges && state.flangeThickness < stats.maxFlangeOverhang) {
+        warnings.push("The upper flange taper is still steeper than 45°. Increase flange thickness to about " + mm(stats.maxFlangeOverhang) + " or enable supports.");
       }
-      if (state.flangeEnabled && !state.printFriendlyFlanges) {
+      if (state.upperFlangeEnabled && !state.printFriendlyFlanges) {
         warnings.push("Square upper flanges create unsupported shelves over the tooth grooves. Prusa may report floating bridge anchors; use print-friendly taper or supports.");
+      }
+      if (!state.upperFlangeEnabled) {
+        warnings.push("Upper flange is off to avoid Prusa's floating-bridge warning. Use supports, a separately printed top flange, or enable the upper flange if you need belt retention on both sides.");
       }
 
       const box = document.getElementById("warningBox");
