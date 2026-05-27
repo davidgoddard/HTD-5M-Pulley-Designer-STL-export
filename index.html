@@ -455,9 +455,7 @@
         if (!best || error < best.error) best = { ...candidate, error };
       }
 
-      if (!best) {
-        best = { alpha: 0, beta: Math.PI / 2, x: halfGrooveWidth, error: 0 };
-      }
+      if (!best) best = { alpha: 0, beta: Math.PI / 2, x: halfGrooveWidth, error: 0 };
 
       const { alpha, beta } = best;
       const points = [];
@@ -465,9 +463,7 @@
 
       function addPoint(x, y) {
         const last = points[points.length - 1];
-        if (!last || Math.abs(last.x - x) > 1e-6 || Math.abs(last.y - y) > 1e-6) {
-          points.push({ x, y });
-        }
+        if (!last || Math.abs(last.x - x) > 1e-6 || Math.abs(last.y - y) > 1e-6) points.push({ x, y });
       }
 
       for (let i = 0; i <= samples; i++) {
@@ -598,8 +594,11 @@
         const j = (i + 1) % segments;
         addQuad(faces, outerA[i], outerA[j], outerB[j], outerB[i]);
         addQuad(faces, innerA[j], innerA[i], innerB[i], innerB[j]);
-        if (capStart) addQuad(faces, innerA[i], outerA[i], outerA[j], innerA[j]);
-        if (capEnd) addQuad(faces, outerB[i], innerB[i], innerB[j], outerB[j]);
+
+        // Correct outward normals for bottom and top annular caps.
+        // The older static file had these two lines reversed, causing slicer repairs.
+        if (capStart) addQuad(faces, innerA[j], outerA[j], outerA[i], innerA[i]);
+        if (capEnd) addQuad(faces, outerB[j], innerB[j], innerB[i], outerB[i]);
       }
 
       mesh.parts.push(label);
