@@ -1,113 +1,515 @@
 <!doctype html>
 <html lang="en">
+
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>HTD 5M Pulley STL Generator</title>
-<style>
-:root{--bg:#f1f5f9;--card:#fff;--text:#0f172a;--muted:#64748b;--line:#e2e8f0;--soft:#f8fafc;--dark:#020617;--warn:#fffbeb;--warnline:#fde68a;--warntext:#78350f;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text)}.page{min-height:100vh;padding:24px}.wrap{width:min(1280px,100%);margin:auto;display:grid;gap:24px}.header,.card{background:var(--card);border:1px solid var(--line);border-radius:24px;box-shadow:0 1px 2px rgba(15,23,42,.04)}.header{padding:24px;display:flex;justify-content:space-between;gap:24px;align-items:flex-end}.eyebrow{margin:0 0 6px;color:var(--muted);font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}h1,h2,p{margin-top:0}h1{margin-bottom:12px;font-size:clamp(28px,4vw,42px);line-height:1.05;letter-spacing:-.04em}h2{margin-bottom:14px;font-size:18px}.intro{max-width:780px;color:var(--muted);line-height:1.6;font-size:14px;margin-bottom:0}.button{border:0;border-radius:16px;background:var(--dark);color:white;padding:13px 20px;font-weight:700;cursor:pointer;min-width:130px}.button:hover{background:#1e293b}.main{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(360px,.9fr);gap:24px;align-items:start}.left,.right{display:grid;gap:24px}.card{padding:20px}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.grid.four{grid-template-columns:repeat(4,minmax(0,1fr))}.field{display:grid;gap:6px;font-size:14px;font-weight:650;color:#334155}.input-wrap{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:14px;background:white;padding:9px 12px}input[type=number]{width:100%;border:0;outline:0;font-size:14px;background:transparent;color:var(--text)}.suffix{color:var(--muted);font-size:12px;white-space:nowrap}.section-head{display:flex;justify-content:space-between;gap:18px;align-items:start;margin-bottom:16px}.section-head p{color:var(--muted);font-size:14px;line-height:1.5;margin-bottom:0}.check-stack{display:grid;gap:10px;justify-items:end}.check{display:inline-flex;align-items:center;gap:8px;font-weight:700;color:#334155;white-space:nowrap;font-size:14px;cursor:pointer}.preview-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}.badge{border-radius:999px;background:#f1f5f9;color:#475569;padding:6px 10px;font-size:12px;font-weight:700}svg{display:block;width:100%;max-width:360px;height:auto;margin:0 auto 18px}.stat-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.stat-box{background:var(--soft);border-radius:14px;padding:12px}.stat-label{color:var(--muted);font-size:12px;margin-bottom:4px}.stat-value{font-weight:800;color:var(--text)}.dimensions{margin:0;font-size:14px}.dim-row{display:flex;justify-content:space-between;gap:20px;padding:10px 0;border-bottom:1px solid #f1f5f9}.dim-row:last-child{border-bottom:0}.dim-row dt{color:var(--muted)}.dim-row dd{margin:0;font-weight:800;text-align:right}.note{border-radius:20px;padding:18px;font-size:14px;line-height:1.6}.note h2{margin-bottom:8px}.note p,.note ul{margin-bottom:0}.manufacturing{background:var(--warn);border:1px solid var(--warnline);color:var(--warntext)}.warnings{background:#fef2f2;border:1px solid #fecaca;color:#7f1d1d}.warnings ul{padding-left:20px;margin-top:8px}@media(max-width:980px){.header,.main{display:grid;grid-template-columns:1fr}.grid,.grid.four{grid-template-columns:repeat(2,minmax(0,1fr))}.check-stack{justify-items:start}}@media(max-width:620px){.page{padding:14px}.grid,.grid.four,.stat-grid{grid-template-columns:1fr}.section-head{display:grid}}
-</style>
-</head>
-<body>
-<div class="page"><div class="wrap">
-<header class="header"><div><p class="eyebrow">STL pulley designer</p><h1>5M 15 mm timing pulley generator</h1><p class="intro">Static browser tool for designing printable 5 mm pitch timing pulleys. Set the tooth count, bore, face width, flanges, and arc-based HTD groove dimensions, then export an ASCII STL file.</p></div><button id="exportStl" class="button" type="button">Export STL</button></header>
-<main class="main">
-<section class="left">
-<div class="card"><h2>Pulley size and tooth profile</h2><div class="grid" id="pulleyFields"></div></div>
-<div class="card"><div class="section-head"><div><h2>Flanges and bosses</h2><p>Lower and upper flanges can be switched independently. Square flanges give the cleanest pulley shape; the optional upper taper is only for support-free FDM printing.</p></div><div class="check-stack"><label class="check"><input id="flangeEnabled" type="checkbox" />Lower flange</label><label class="check"><input id="upperFlangeEnabled" type="checkbox" />Upper flange</label><label class="check"><input id="printFriendlyFlanges" type="checkbox" />Taper upper flange</label></div></div><div class="grid four" id="flangeFields"></div></div>
-</section>
-<aside class="right">
-<div class="card"><div class="preview-head"><h2>Preview</h2><span class="badge">Top view</span></div><svg viewBox="0 0 220 220" aria-label="Pulley preview"><circle id="flangePreview" cx="110" cy="110" r="80" fill="none" stroke="#cbd5e1" stroke-width="3"></circle><polygon id="pulleyPreview" points="" fill="#1e293b" opacity=".94"></polygon><circle id="borePreview" cx="110" cy="110" r="20" fill="white" stroke="#64748b" stroke-width="2"></circle><circle cx="110" cy="110" r="3" fill="#94a3b8"></circle></svg><div class="stat-grid"><div class="stat-box"><div class="stat-label">Pitch diameter</div><div class="stat-value" id="previewPitchDiameter">—</div></div><div class="stat-box"><div class="stat-label">Outside diameter</div><div class="stat-value" id="previewOutsideDiameter">—</div></div><div class="stat-box"><div class="stat-label">Root diameter</div><div class="stat-value" id="previewRootDiameter">—</div></div><div class="stat-box"><div class="stat-label">STL triangles</div><div class="stat-value" id="previewTriangles">—</div></div></div></div>
-<div class="card"><h2>Calculated dimensions</h2><dl class="dimensions" id="dimensions"></dl></div>
-<div class="note manufacturing"><h2>Manufacturing note</h2><p>This app generates the groove from tangential arc geometry using OD offset, groove depth, plunge radius, floor/corner radius, and explicit pulley tooth crest width. It is still not a certified manufacturer profile unless those dimensions match the exact belt maker's published data and tolerances.</p></div>
-<div class="note warnings" id="warningBox" hidden><h2>Warnings</h2><ul id="warningList"></ul></div>
-</aside>
-</main></div></div>
-<script>
-const TAU=Math.PI*2;
-const state={teeth:24,pitch:5,beltWidth:15,faceWidth:20.5,boreDiameter:8,odOffset:1.14,grooveDepth:2.06,plungeRadius:1.49,floorRadius:.43,toothCrestWidth:1.45,samplesPerTooth:18,flangeEnabled:true,upperFlangeEnabled:true,printFriendlyFlanges:false,flangeExtra:2.25,flangeThickness:1.2,bossDiameter:16,bossExtension:0};
-const pulleyFieldDefs=[["teeth","Tooth count",8,240,1,"T"],["pitch","Pitch",1,20,.1,"mm"],["beltWidth","Nominal belt width",3,80,.1,"mm"],["faceWidth","Toothed face width",3,100,.1,"mm"],["boreDiameter","Bore diameter",1,100,.1,"mm"],["odOffset","OD offset from pitch dia.",0,4,.01,"mm"],["grooveDepth","Groove depth",.1,4,.01,"mm"],["plungeRadius","Plunge arc radius",.5,5,.01,"mm"],["floorRadius","Floor/corner radius",.05,2,.01,"mm"],["toothCrestWidth","Pulley tooth crest width",.8,2.2,.01,"mm"],["samplesPerTooth","Mesh quality",8,48,1,"samples/tooth"]];
-const flangeFieldDefs=[["flangeExtra","Flange radial extra",.2,8,.05,"mm/side"],["flangeThickness","Flange thickness",.2,8,.05,"mm"],["bossDiameter","Boss diameter",2,120,.1,"mm"],["bossExtension","Boss extension",0,40,.1,"mm/side"]];
-function clamp(v,min,max){return Math.max(min,Math.min(max,v))}
-function mm(v,d=2){return Number.isFinite(v)?Number(v).toFixed(d)+" mm":"—"}
-function round(v,d=2){return Number.isFinite(v)?Number(v).toFixed(d):"—"}
-function buildHTDArcProfile(s){
-  const pitch=Math.max(.1,s.pitch), depth=Math.max(.05,s.grooveDepth), plungeRadius=Math.max(depth/2+.001,s.plungeRadius||1.49), cornerRadius=Math.max(.01,s.floorRadius||.43);
-  const toothCrestWidth=clamp(s.toothCrestWidth||1.45,.8,pitch*.48);
-  const halfGrooveWidth=Math.max(.05,(pitch-toothCrestWidth)/2);
-  function geometryForAlpha(alpha){
-    const cosBeta=(2*cornerRadius+(plungeRadius-cornerRadius)*Math.cos(alpha)-depth)/(plungeRadius+cornerRadius);
-    if(cosBeta<-1||cosBeta>1)return null;
-    const beta=Math.acos(cosBeta); if(beta<=alpha)return null;
-    const x=cornerRadius*Math.sin(alpha)+plungeRadius*(Math.sin(beta)-Math.sin(alpha))+cornerRadius*Math.sin(beta);
-    return{alpha,beta,x};
-  }
-  let best=null, maxAlpha=Math.min(Math.PI*.48,Math.PI/2.05);
-  for(let i=0;i<=720;i++){const alpha=i/720*maxAlpha,c=geometryForAlpha(alpha); if(!c)continue; const error=Math.abs(c.x-halfGrooveWidth); if(!best||error<best.error)best={...c,error};}
-  if(!best)best={alpha:0,beta:Math.PI/2,x:halfGrooveWidth,error:0};
-  const {alpha,beta}=best, points=[], samples=54;
-  function addPoint(x,y){const last=points[points.length-1]; if(!last||Math.abs(last.x-x)>1e-6||Math.abs(last.y-y)>1e-6)points.push({x,y});}
-  for(let i=0;i<=samples;i++){const a=alpha*i/samples; addPoint(cornerRadius*Math.sin(a),cornerRadius*(1-Math.cos(a)));}
-  const x1=cornerRadius*Math.sin(alpha),y1=cornerRadius*(1-Math.cos(alpha));
-  for(let i=1;i<=samples;i++){const a=alpha+(beta-alpha)*i/samples; addPoint(x1+plungeRadius*(Math.sin(a)-Math.sin(alpha)),y1+plungeRadius*(Math.cos(alpha)-Math.cos(a)));}
-  const x2=x1+plungeRadius*(Math.sin(beta)-Math.sin(alpha)), y2=y1+plungeRadius*(Math.cos(alpha)-Math.cos(beta));
-  for(let i=1;i<=samples;i++){const a=beta*(1-i/samples); addPoint(x2+cornerRadius*(Math.sin(beta)-Math.sin(a)),y2+cornerRadius*(Math.cos(a)-Math.cos(beta)));}
-  const last=points[points.length-1], scaleX=last&&last.x>0?halfGrooveWidth/last.x:1, scaleY=last&&last.y>0?depth/last.y:1;
-  const scaledPoints=points.map(p=>({x:p.x*scaleX,y:p.y*scaleY})); scaledPoints[0]={x:0,y:0}; scaledPoints[scaledPoints.length-1]={x:halfGrooveWidth,y:depth};
-  return{points:scaledPoints,depth,halfGrooveWidth,grooveTopWidth:halfGrooveWidth*2,toothLandWidth:toothCrestWidth,plungeRadius,cornerRadius,alphaDeg:alpha*180/Math.PI,betaDeg:beta*180/Math.PI};
-}
-function interpolateProfileY(profile,x){
-  const pts=profile.points; if(x<=0)return 0; if(x>=profile.halfGrooveWidth)return profile.depth;
-  let low=0,high=pts.length-1; while(high-low>1){const mid=Math.floor((low+high)/2); if(pts[mid].x<x)low=mid; else high=mid;}
-  const a=pts[low],b=pts[high],t=clamp((x-a.x)/Math.max(1e-9,b.x-a.x),0,1); return a.y+(b.y-a.y)*t;
-}
-function htd5mArcGrooveRadius(theta,s,profile=buildHTDArcProfile(s)){
-  const teeth=Math.round(clamp(s.teeth,8,240)),pitch=Math.max(.1,s.pitch),pitchDiameter=teeth*pitch/Math.PI,outsideRadius=Math.max(1,(pitchDiameter-s.odOffset)/2),rootRadius=outsideRadius-profile.depth;
-  const cycles=theta/TAU*teeth, local=((cycles+.5)%1)-.5, x=Math.abs(local)*pitch, y=interpolateProfileY(profile,x);
-  return rootRadius+y;
-}
-function makeVertex(vertices,x,y,z){vertices.push([x,y,z]);return vertices.length-1}
-function addQuad(faces,a,b,c,d){faces.push([a,b,c]);faces.push([a,c,d])}
-function makeNormal(a,b,c){const ux=b[0]-a[0],uy=b[1]-a[1],uz=b[2]-a[2],vx=c[0]-a[0],vy=c[1]-a[1],vz=c[2]-a[2];const nx=uy*vz-uz*vy,ny=uz*vx-ux*vz,nz=ux*vy-uy*vx,len=Math.hypot(nx,ny,nz)||1;return[nx/len,ny/len,nz/len]}
-function addTube(mesh,innerRadius,outerRadiusFn,z0,z1,segments,label="tube",capStart=true,capEnd=true){
-  const {vertices,faces}=mesh,outerA=[],outerB=[],innerA=[],innerB=[];
-  for(let i=0;i<segments;i++){const theta=i/segments*TAU,cos=Math.cos(theta),sin=Math.sin(theta),r0=outerRadiusFn(theta,z0),r1=outerRadiusFn(theta,z1);outerA.push(makeVertex(vertices,cos*r0,sin*r0,z0));outerB.push(makeVertex(vertices,cos*r1,sin*r1,z1));innerA.push(makeVertex(vertices,cos*innerRadius,sin*innerRadius,z0));innerB.push(makeVertex(vertices,cos*innerRadius,sin*innerRadius,z1));}
-  for(let i=0;i<segments;i++){const j=(i+1)%segments;addQuad(faces,outerA[i],outerA[j],outerB[j],outerB[i]);addQuad(faces,innerA[j],innerA[i],innerB[i],innerB[j]);if(capStart)addQuad(faces,innerA[j],outerA[j],outerA[i],innerA[i]);if(capEnd)addQuad(faces,outerB[j],innerB[j],innerB[i],outerB[i]);}
-  mesh.parts.push(label);
-}
-function addOuterAnnulus(mesh,innerRadiusFn,outerRadiusFn,z,segments,flip=false){
-  const {vertices,faces}=mesh,inner=[],outer=[];
-  for(let i=0;i<segments;i++){const theta=i/segments*TAU,cos=Math.cos(theta),sin=Math.sin(theta),ri=innerRadiusFn(theta,z),ro=outerRadiusFn(theta,z);inner.push(makeVertex(vertices,cos*ri,sin*ri,z));outer.push(makeVertex(vertices,cos*ro,sin*ro,z));}
-  for(let i=0;i<segments;i++){const j=(i+1)%segments;if(flip)addQuad(faces,inner[j],inner[i],outer[i],outer[j]);else addQuad(faces,inner[i],inner[j],outer[j],outer[i]);}
-}
-function generatePulleyMesh(s){
-  const teeth=Math.round(clamp(s.teeth,8,240)),samplesPerTooth=Math.round(clamp(s.samplesPerTooth,8,48)),segments=Math.max(96,teeth*samplesPerTooth),width=Math.max(s.beltWidth+1,s.faceWidth||s.beltWidth),boreRadius=Math.max(.25,s.boreDiameter/2),pitchDiameter=teeth*s.pitch/Math.PI,outsideDiameter=pitchDiameter-s.odOffset,outsideRadius=outsideDiameter/2,rootRadius=outsideRadius-s.grooveDepth;
-  const hasLower=!!s.flangeEnabled,hasUpper=!!s.upperFlangeEnabled,flangeThickness=(hasLower||hasUpper)?Math.max(.2,s.flangeThickness):0,lowerT=hasLower?flangeThickness:0,upperT=hasUpper?flangeThickness:0,flangeRadius=Math.max(outsideRadius+.2,(outsideDiameter+s.flangeExtra*2)/2);
-  const zFace0=-width/2,zFace1=width/2,zMin=zFace0-lowerT,zMax=zFace1+upperT,mesh={vertices:[],faces:[],parts:[]},toothProfile=buildHTDArcProfile({...s,teeth});
-  const profileRadius=theta=>htd5mArcGrooveRadius(theta,{...s,teeth},toothProfile),flangeOuter=()=>flangeRadius;
-  if(hasLower||hasUpper){
-    const bodyCapStart=!hasLower,bodyCapEnd=!hasUpper;
-    if(hasLower){addTube(mesh,boreRadius,flangeOuter,zMin,zFace0,segments,"lower square flange",true,false);addOuterAnnulus(mesh,profileRadius,flangeOuter,zFace0,segments,true);}
-    addTube(mesh,boreRadius,profileRadius,zFace0,zFace1,segments,"toothed pulley body",bodyCapStart,bodyCapEnd);
-    if(hasUpper){
-      if(s.printFriendlyFlanges){const upperOuter=(theta,z)=>{const t=clamp((z-zFace1)/Math.max(1e-9,upperT),0,1);return profileRadius(theta)+(flangeRadius-profileRadius(theta))*t};addTube(mesh,boreRadius,upperOuter,zFace1,zMax,segments,"upper tapered flange",false,true);}
-      else{addTube(mesh,boreRadius,flangeOuter,zFace1,zMax,segments,"upper square flange",false,true);addOuterAnnulus(mesh,profileRadius,flangeOuter,zFace1,segments,false);}
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HTD 5M Pulley STL Generator</title>
+  <style>
+    :root {
+      --bg: #f1f5f9;
+      --card: #fff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --soft: #f8fafc;
+      --dark: #020617;
+      --warn: #fffbeb;
+      --warnline: #fde68a;
+      --warntext: #78350f;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif
     }
-  }else addTube(mesh,boreRadius,profileRadius,zFace0,zFace1,segments,"toothed pulley body");
-  const bossExtension=Math.max(0,s.bossExtension),bossRadius=Math.max(boreRadius+.5,s.bossDiameter/2); if(bossExtension>0&&bossRadius<outsideRadius-.2){const bossFn=()=>bossRadius;addTube(mesh,boreRadius,bossFn,zMin-bossExtension,zMin,segments,"lower bore boss");addTube(mesh,boreRadius,bossFn,zMax,zMax+bossExtension,segments,"upper bore boss");}
-  return{...mesh,stats:{teeth,segments,width,pitchDiameter,outsideDiameter,rootDiameter:rootRadius*2,flangeDiameter:flangeRadius*2,totalLength:width+lowerT+upperT+bossExtension*2,maxFlangeOverhang:Math.max(0,flangeRadius-rootRadius),halfGrooveWidth:toothProfile.halfGrooveWidth,grooveTopWidth:toothProfile.grooveTopWidth,toothLandWidth:toothProfile.toothLandWidth,plungeRadius:toothProfile.plungeRadius,floorRadius:toothProfile.cornerRadius,arcAngles:toothProfile.alphaDeg.toFixed(1)+"° / "+toothProfile.betaDeg.toFixed(1)+"°"}};
-}
-function meshToAsciiStl(mesh,name="pulley"){const lines=["solid "+name];for(const face of mesh.faces){const a=mesh.vertices[face[0]],b=mesh.vertices[face[1]],c=mesh.vertices[face[2]],n=makeNormal(a,b,c);lines.push("  facet normal "+n[0].toExponential(6)+" "+n[1].toExponential(6)+" "+n[2].toExponential(6));lines.push("    outer loop");lines.push("      vertex "+a[0].toFixed(6)+" "+a[1].toFixed(6)+" "+a[2].toFixed(6));lines.push("      vertex "+b[0].toFixed(6)+" "+b[1].toFixed(6)+" "+b[2].toFixed(6));lines.push("      vertex "+c[0].toFixed(6)+" "+c[1].toFixed(6)+" "+c[2].toFixed(6));lines.push("    endloop");lines.push("  endfacet");}lines.push("endsolid "+name);return lines.join("\n")}
-function downloadText(filename,text){const blob=new Blob([text],{type:"model/stl;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=filename;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url)}
-function createNumberField(def,container){const[key,label,min,max,step,suffix]=def,wrapper=document.createElement("label");wrapper.className="field";wrapper.innerHTML=`<span>${label}</span><span class="input-wrap"><input id="field-${key}" type="number" min="${min}" max="${max}" step="${step}" value="${state[key]}"><span class="suffix">${suffix}</span></span>`;container.appendChild(wrapper);const input=wrapper.querySelector("input");input.addEventListener("input",()=>{const raw=Number(input.value);state[key]=Number.isFinite(raw)?raw:state[key];render()})}
-function renderInputs(){const pulleyFields=document.getElementById("pulleyFields"),flangeFields=document.getElementById("flangeFields");pulleyFieldDefs.forEach(def=>createNumberField(def,pulleyFields));flangeFieldDefs.forEach(def=>createNumberField(def,flangeFields));[["flangeEnabled","flangeEnabled"],["upperFlangeEnabled","upperFlangeEnabled"],["printFriendlyFlanges","printFriendlyFlanges"]].forEach(([id,key])=>{const el=document.getElementById(id);el.checked=state[key];el.addEventListener("change",()=>{state[key]=el.checked;render()})})}
-function setText(id,value){document.getElementById(id).textContent=value}
-function renderPreview(stats){const profile=buildHTDArcProfile(state),samples=Math.max(240,stats.teeth*28),maxR=(state.flangeEnabled||state.upperFlangeEnabled)?Math.max(stats.flangeDiameter/2,stats.outsideDiameter/2):stats.outsideDiameter/2,scale=170/Math.max(1,maxR*2),cx=110,cy=110,pts=[];for(let i=0;i<samples;i++){const theta=i/samples*TAU,r=htd5mArcGrooveRadius(theta,state,profile);pts.push(cx+Math.cos(theta)*r*scale+","+(cy+Math.sin(theta)*r*scale))}const flangePreview=document.getElementById("flangePreview");flangePreview.style.display=(state.flangeEnabled||state.upperFlangeEnabled)?"block":"none";flangePreview.setAttribute("r",String(stats.flangeDiameter/2*scale));document.getElementById("pulleyPreview").setAttribute("points",pts.join(" "));document.getElementById("borePreview").setAttribute("r",String(state.boreDiameter/2*scale))}
-function renderDimensions(mesh){const s=mesh.stats,rows=[["Teeth",s.teeth],["Pitch circumference",mm(s.teeth*state.pitch)],["Pitch diameter",mm(s.pitchDiameter)],["Outside diameter",mm(s.outsideDiameter)],["Root diameter",mm(s.rootDiameter)],["Nominal belt width",mm(state.beltWidth)],["Toothed face width",mm(s.width)],["Belt side clearance",mm(s.width-state.beltWidth)],["Groove top width",mm(s.grooveTopWidth)],["Tooth crest width",mm(s.toothLandWidth)],["Arc radii","R"+round(s.plungeRadius,2)+" / R"+round(s.floorRadius,2)],["Arc angles",s.arcAngles],["Flange diameter",(state.flangeEnabled||state.upperFlangeEnabled)?mm(s.flangeDiameter):"None"],["Max flange overhang",(state.flangeEnabled||state.upperFlangeEnabled)?mm(s.maxFlangeOverhang):"None"],["Flange mode",(state.flangeEnabled||state.upperFlangeEnabled)?((state.flangeEnabled&&state.upperFlangeEnabled?"Double":state.flangeEnabled?"Lower only":"Upper only")+" / lower square"+(state.upperFlangeEnabled?(state.printFriendlyFlanges?", upper tapered":", upper square"):"")):"None"],["Total length",mm(s.totalLength)],["Vertices",mesh.vertices.length.toLocaleString()],["Triangles",mesh.faces.length.toLocaleString()]];document.getElementById("dimensions").innerHTML=rows.map(([label,value])=>`<div class="dim-row"><dt>${label}</dt><dd>${value}</dd></div>`).join("")}
-function renderWarnings(stats){const warnings=[];if(state.teeth<12)warnings.push("Very small tooth counts can have poor belt engagement and weak printed teeth.");if(state.boreDiameter>=stats.rootDiameter-2)warnings.push("Bore is large relative to the root diameter. Leave more wall thickness or use a larger tooth count.");if(state.grooveDepth>2.25)warnings.push("Groove depth is above the common HTD 5M range. Check belt fit before printing functional parts.");if(state.plungeRadius<=state.grooveDepth/2)warnings.push("Plunge radius must be greater than half the groove depth for a valid circular plunge arc.");if(state.toothCrestWidth>1.8)warnings.push("Pulley tooth crest is wide for HTD 5M. The belt may ride on the tooth tops instead of engaging the grooves.");if(state.toothCrestWidth<1.0)warnings.push("Pulley tooth crest is very narrow. Printed teeth may be weak or sharp.");if(state.faceWidth<state.beltWidth+1)warnings.push("Toothed face width is tight for the nominal belt width. Use at least belt width + 1 mm clearance.");if(state.bossExtension>0&&state.bossDiameter>=stats.outsideDiameter)warnings.push("Boss diameter must stay below the pulley outside diameter; it has been ignored in the STL mesh.");if(state.upperFlangeEnabled&&state.printFriendlyFlanges&&state.flangeThickness<stats.maxFlangeOverhang)warnings.push("The upper flange taper is still steeper than 45°. Increase flange thickness to about "+mm(stats.maxFlangeOverhang)+" or enable supports.");if(state.upperFlangeEnabled&&!state.printFriendlyFlanges)warnings.push("Square upper flanges can create unsupported shelves over the tooth grooves in FDM. Use supports, enable the upper taper, or print the top flange separately if your slicer warns.");if(!state.upperFlangeEnabled)warnings.push("Upper flange is off. Enable it if you need belt retention on both sides, or print a separate top flange/ring.");const box=document.getElementById("warningBox"),list=document.getElementById("warningList");box.hidden=warnings.length===0;list.innerHTML=warnings.map(w=>`<li>${w}</li>`).join("")}
-let currentMesh=null;function render(){currentMesh=generatePulleyMesh(state);const stats=currentMesh.stats;renderPreview(stats);renderDimensions(currentMesh);renderWarnings(stats);setText("previewPitchDiameter",mm(stats.pitchDiameter));setText("previewOutsideDiameter",mm(stats.outsideDiameter));setText("previewRootDiameter",mm(stats.rootDiameter));setText("previewTriangles",(currentMesh.faces.length||0).toLocaleString())}
-document.getElementById("exportStl").addEventListener("click",()=>{const mesh=currentMesh||generatePulleyMesh(state),stats=mesh.stats,filename=`HTD_5M_${stats.teeth}T_${round(state.beltWidth,0)}mm_belt_${round(stats.width,1)}mm_face_bore_${round(state.boreDiameter,0)}mm.stl`;downloadText(filename,meshToAsciiStl(mesh,filename.replace(/\.stl$/i,""))) });
-renderInputs();render();
-</script>
+
+    * {
+      box-sizing: border-box
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text)
+    }
+
+    .page {
+      min-height: 100vh;
+      padding: 24px
+    }
+
+    .wrap {
+      width: min(1280px, 100%);
+      margin: auto;
+      display: grid;
+      gap: 24px
+    }
+
+    .header,
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, .04)
+    }
+
+    .header {
+      padding: 24px;
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      align-items: flex-end
+    }
+
+    .eyebrow {
+      margin: 0 0 6px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase
+    }
+
+    h1,
+    h2,
+    p {
+      margin-top: 0
+    }
+
+    h1 {
+      margin-bottom: 12px;
+      font-size: clamp(28px, 4vw, 42px);
+      line-height: 1.05;
+      letter-spacing: -.04em
+    }
+
+    h2 {
+      margin-bottom: 14px;
+      font-size: 18px
+    }
+
+    .intro {
+      max-width: 780px;
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 14px;
+      margin-bottom: 0
+    }
+
+    .button {
+      border: 0;
+      border-radius: 16px;
+      background: var(--dark);
+      color: white;
+      padding: 13px 20px;
+      font-weight: 700;
+      cursor: pointer;
+      min-width: 130px
+    }
+
+    .button:hover {
+      background: #1e293b
+    }
+
+    .main {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(360px, .9fr);
+      gap: 24px;
+      align-items: start
+    }
+
+    .left,
+    .right {
+      display: grid;
+      gap: 24px
+    }
+
+    .card {
+      padding: 20px
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px
+    }
+
+    .grid.four {
+      grid-template-columns: repeat(4, minmax(0, 1fr))
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+      font-size: 14px;
+      font-weight: 650;
+      color: #334155
+    }
+
+    .input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: white;
+      padding: 9px 12px
+    }
+
+    input[type=number] {
+      width: 100%;
+      border: 0;
+      outline: 0;
+      font-size: 14px;
+      background: transparent;
+      color: var(--text)
+    }
+
+    .suffix {
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: start;
+      margin-bottom: 16px
+    }
+
+    .section-head p {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+      margin-bottom: 0
+    }
+
+    .check-stack {
+      display: grid;
+      gap: 10px;
+      justify-items: end
+    }
+
+    .check {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      color: #334155;
+      white-space: nowrap;
+      font-size: 14px;
+      cursor: pointer
+    }
+
+    .preview-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px
+    }
+
+    .badge {
+      border-radius: 999px;
+      background: #f1f5f9;
+      color: #475569;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 700
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      max-width: 360px;
+      height: auto;
+      margin: 0 auto 18px
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px
+    }
+
+    .stat-box {
+      background: var(--soft);
+      border-radius: 14px;
+      padding: 12px
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 4px
+    }
+
+    .stat-value {
+      font-weight: 800;
+      color: var(--text)
+    }
+
+    .dimensions {
+      margin: 0;
+      font-size: 14px
+    }
+
+    .dim-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 10px 0;
+      border-bottom: 1px solid #f1f5f9
+    }
+
+    .dim-row:last-child {
+      border-bottom: 0
+    }
+
+    .dim-row dt {
+      color: var(--muted)
+    }
+
+    .dim-row dd {
+      margin: 0;
+      font-weight: 800;
+      text-align: right
+    }
+
+    .note {
+      border-radius: 20px;
+      padding: 18px;
+      font-size: 14px;
+      line-height: 1.6
+    }
+
+    .note h2 {
+      margin-bottom: 8px
+    }
+
+    .note p,
+    .note ul {
+      margin-bottom: 0
+    }
+
+    .manufacturing {
+      background: var(--warn);
+      border: 1px solid var(--warnline);
+      color: var(--warntext)
+    }
+
+    .warnings {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #7f1d1d
+    }
+
+    .warnings ul {
+      padding-left: 20px;
+      margin-top: 8px
+    }
+
+    @media(max-width:980px) {
+
+      .header,
+      .main {
+        display: grid;
+        grid-template-columns: 1fr
+      }
+
+      .grid,
+      .grid.four {
+        grid-template-columns: repeat(2, minmax(0, 1fr))
+      }
+
+      .check-stack {
+        justify-items: start
+      }
+    }
+
+    @media(max-width:620px) {
+      .page {
+        padding: 14px
+      }
+
+      .grid,
+      .grid.four,
+      .stat-grid {
+        grid-template-columns: 1fr
+      }
+
+      .section-head {
+        display: grid
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <div class="wrap">
+      <header class="header">
+        <div>
+          <p class="eyebrow">STL pulley designer</p>
+          <h1>5M 15 mm timing pulley generator</h1>
+          <p class="intro">Static browser tool for designing printable 5 mm pitch timing pulleys. Set the tooth count,
+            bore, face width, flanges, and arc-based HTD groove dimensions, then export an ASCII STL file.</p>
+        </div><button id="exportStl" class="button" type="button">Export STL</button>
+      </header>
+      <main class="main">
+        <section class="left">
+          <div class="card">
+            <h2>Pulley size and tooth profile</h2>
+            <div class="grid" id="pulleyFields"></div>
+          </div>
+          <div class="card">
+            <div class="section-head">
+              <div>
+                <h2>Flanges and bosses</h2>
+                <p>Lower and upper flanges can be switched independently. Square flanges give the cleanest pulley shape;
+                  the optional upper taper is only for support-free FDM printing.</p>
+              </div>
+              <div class="check-stack"><label class="check"><input id="flangeEnabled" type="checkbox" />Lower
+                  flange</label><label class="check"><input id="upperFlangeEnabled" type="checkbox" />Upper
+                  flange</label><label class="check"><input id="printFriendlyFlanges" type="checkbox" />Taper upper
+                  flange</label></div>
+            </div>
+            <div class="grid four" id="flangeFields"></div>
+          </div>
+        </section>
+        <aside class="right">
+          <div class="card">
+            <div class="preview-head">
+              <h2>Preview</h2><span class="badge">Top view</span>
+            </div><svg viewBox="0 0 220 220" aria-label="Pulley preview">
+              <circle id="flangePreview" cx="110" cy="110" r="80" fill="none" stroke="#cbd5e1" stroke-width="3">
+              </circle>
+              <polygon id="pulleyPreview" points="" fill="#1e293b" opacity=".94"></polygon>
+              <circle id="borePreview" cx="110" cy="110" r="20" fill="white" stroke="#64748b" stroke-width="2"></circle>
+              <circle cx="110" cy="110" r="3" fill="#94a3b8"></circle>
+            </svg>
+            <div class="stat-grid">
+              <div class="stat-box">
+                <div class="stat-label">Pitch diameter</div>
+                <div class="stat-value" id="previewPitchDiameter">—</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-label">Outside diameter</div>
+                <div class="stat-value" id="previewOutsideDiameter">—</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-label">Root diameter</div>
+                <div class="stat-value" id="previewRootDiameter">—</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-label">STL triangles</div>
+                <div class="stat-value" id="previewTriangles">—</div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <h2>Calculated dimensions</h2>
+            <dl class="dimensions" id="dimensions"></dl>
+          </div>
+          <div class="note manufacturing">
+            <h2>Manufacturing note</h2>
+            <p>This app generates the groove from tangential arc geometry using OD offset, groove depth, plunge radius,
+              floor/corner radius, and explicit pulley tooth crest width. It is still not a certified manufacturer
+              profile unless those dimensions match the exact belt maker's published data and tolerances.</p>
+          </div>
+          <div class="note warnings" id="warningBox" hidden>
+            <h2>Warnings</h2>
+            <ul id="warningList"></ul>
+          </div>
+        </aside>
+      </main>
+    </div>
+  </div>
+  <script>
+    const TAU = Math.PI * 2;
+    const state = { teeth: 24, pitch: 5, beltWidth: 15, faceWidth: 20.5, boreDiameter: 8, odOffset: 1.14, grooveDepth: 2.06, plungeRadius: 1.49, floorRadius: .43, toothCrestWidth: 1.45, samplesPerTooth: 18, flangeEnabled: true, upperFlangeEnabled: true, printFriendlyFlanges: false, flangeExtra: 2.25, flangeThickness: 1.2, bossDiameter: 16, bossExtension: 0 };
+    const pulleyFieldDefs = [["teeth", "Tooth count", 8, 240, 1, "T"], ["pitch", "Pitch", 1, 20, .1, "mm"], ["beltWidth", "Nominal belt width", 3, 80, .1, "mm"], ["faceWidth", "Toothed face width", 3, 100, .1, "mm"], ["boreDiameter", "Bore diameter", 1, 100, .1, "mm"], ["odOffset", "OD offset from pitch dia.", 0, 4, .01, "mm"], ["grooveDepth", "Groove depth", .1, 4, .01, "mm"], ["plungeRadius", "Plunge arc radius", .5, 5, .01, "mm"], ["floorRadius", "Floor/corner radius", .05, 2, .01, "mm"], ["toothCrestWidth", "Pulley tooth crest width", .8, 2.2, .01, "mm"], ["samplesPerTooth", "Mesh quality", 8, 48, 1, "samples/tooth"]];
+    const flangeFieldDefs = [["flangeExtra", "Flange radial extra", .2, 8, .05, "mm/side"], ["flangeThickness", "Flange thickness", .2, 8, .05, "mm"], ["bossDiameter", "Boss diameter", 2, 120, .1, "mm"], ["bossExtension", "Boss extension", 0, 40, .1, "mm/side"]];
+    function clamp(v, min, max) { return Math.max(min, Math.min(max, v)) }
+    function mm(v, d = 2) { return Number.isFinite(v) ? Number(v).toFixed(d) + " mm" : "—" }
+    function round(v, d = 2) { return Number.isFinite(v) ? Number(v).toFixed(d) : "—" }
+    function buildHTDArcProfile(s) {
+      const pitch = Math.max(.1, s.pitch), depth = Math.max(.05, s.grooveDepth), plungeRadius = Math.max(depth / 2 + .001, s.plungeRadius || 1.49), cornerRadius = Math.max(.01, s.floorRadius || .43);
+      const toothCrestWidth = clamp(s.toothCrestWidth || 1.45, .8, pitch * .48);
+      const halfGrooveWidth = Math.max(.05, (pitch - toothCrestWidth) / 2);
+      function geometryForAlpha(alpha) {
+        const cosBeta = (2 * cornerRadius + (plungeRadius - cornerRadius) * Math.cos(alpha) - depth) / (plungeRadius + cornerRadius);
+        if (cosBeta < -1 || cosBeta > 1) return null;
+        const beta = Math.acos(cosBeta); if (beta <= alpha) return null;
+        const x = cornerRadius * Math.sin(alpha) + plungeRadius * (Math.sin(beta) - Math.sin(alpha)) + cornerRadius * Math.sin(beta);
+        return { alpha, beta, x };
+      }
+      let best = null, maxAlpha = Math.min(Math.PI * .48, Math.PI / 2.05);
+      for (let i = 0; i <= 720; i++) { const alpha = i / 720 * maxAlpha, c = geometryForAlpha(alpha); if (!c) continue; const error = Math.abs(c.x - halfGrooveWidth); if (!best || error < best.error) best = { ...c, error }; }
+      if (!best) best = { alpha: 0, beta: Math.PI / 2, x: halfGrooveWidth, error: 0 };
+      const { alpha, beta } = best, points = [], samples = 54;
+      function addPoint(x, y) { const last = points[points.length - 1]; if (!last || Math.abs(last.x - x) > 1e-6 || Math.abs(last.y - y) > 1e-6) points.push({ x, y }); }
+      for (let i = 0; i <= samples; i++) { const a = alpha * i / samples; addPoint(cornerRadius * Math.sin(a), cornerRadius * (1 - Math.cos(a))); }
+      const x1 = cornerRadius * Math.sin(alpha), y1 = cornerRadius * (1 - Math.cos(alpha));
+      for (let i = 1; i <= samples; i++) { const a = alpha + (beta - alpha) * i / samples; addPoint(x1 + plungeRadius * (Math.sin(a) - Math.sin(alpha)), y1 + plungeRadius * (Math.cos(alpha) - Math.cos(a))); }
+      const x2 = x1 + plungeRadius * (Math.sin(beta) - Math.sin(alpha)), y2 = y1 + plungeRadius * (Math.cos(alpha) - Math.cos(beta));
+      for (let i = 1; i <= samples; i++) { const a = beta * (1 - i / samples); addPoint(x2 + cornerRadius * (Math.sin(beta) - Math.sin(a)), y2 + cornerRadius * (Math.cos(a) - Math.cos(beta))); }
+      const last = points[points.length - 1], scaleX = last && last.x > 0 ? halfGrooveWidth / last.x : 1, scaleY = last && last.y > 0 ? depth / last.y : 1;
+      const scaledPoints = points.map(p => ({ x: p.x * scaleX, y: p.y * scaleY })); scaledPoints[0] = { x: 0, y: 0 }; scaledPoints[scaledPoints.length - 1] = { x: halfGrooveWidth, y: depth };
+      return { points: scaledPoints, depth, halfGrooveWidth, grooveTopWidth: halfGrooveWidth * 2, toothLandWidth: toothCrestWidth, plungeRadius, cornerRadius, alphaDeg: alpha * 180 / Math.PI, betaDeg: beta * 180 / Math.PI };
+    }
+    function interpolateProfileY(profile, x) {
+      const pts = profile.points; if (x <= 0) return 0; if (x >= profile.halfGrooveWidth) return profile.depth;
+      let low = 0, high = pts.length - 1; while (high - low > 1) { const mid = Math.floor((low + high) / 2); if (pts[mid].x < x) low = mid; else high = mid; }
+      const a = pts[low], b = pts[high], t = clamp((x - a.x) / Math.max(1e-9, b.x - a.x), 0, 1); return a.y + (b.y - a.y) * t;
+    }
+    function htd5mArcGrooveRadius(theta, s, profile = buildHTDArcProfile(s)) {
+      const teeth = Math.round(clamp(s.teeth, 8, 240)), pitch = Math.max(.1, s.pitch), pitchDiameter = teeth * pitch / Math.PI, outsideRadius = Math.max(1, (pitchDiameter - s.odOffset) / 2), rootRadius = outsideRadius - profile.depth;
+      const cycles = theta / TAU * teeth, local = ((cycles + .5) % 1) - .5, x = Math.abs(local) * pitch, y = interpolateProfileY(profile, x);
+      return rootRadius + y;
+    }
+    function makeVertex(vertices, x, y, z) { vertices.push([x, y, z]); return vertices.length - 1 }
+    function addQuad(faces, a, b, c, d) { faces.push([a, b, c]); faces.push([a, c, d]) }
+    function makeNormal(a, b, c) { const ux = b[0] - a[0], uy = b[1] - a[1], uz = b[2] - a[2], vx = c[0] - a[0], vy = c[1] - a[1], vz = c[2] - a[2]; const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx, len = Math.hypot(nx, ny, nz) || 1; return [nx / len, ny / len, nz / len] }
+    function addTube(mesh, innerRadius, outerRadiusFn, z0, z1, segments, label = "tube", capStart = true, capEnd = true) {
+      const { vertices, faces } = mesh, outerA = [], outerB = [], innerA = [], innerB = [];
+      for (let i = 0; i < segments; i++) { const theta = i / segments * TAU, cos = Math.cos(theta), sin = Math.sin(theta), r0 = outerRadiusFn(theta, z0), r1 = outerRadiusFn(theta, z1); outerA.push(makeVertex(vertices, cos * r0, sin * r0, z0)); outerB.push(makeVertex(vertices, cos * r1, sin * r1, z1)); innerA.push(makeVertex(vertices, cos * innerRadius, sin * innerRadius, z0)); innerB.push(makeVertex(vertices, cos * innerRadius, sin * innerRadius, z1)); }
+      for (let i = 0; i < segments; i++) { const j = (i + 1) % segments; addQuad(faces, outerA[i], outerA[j], outerB[j], outerB[i]); addQuad(faces, innerA[j], innerA[i], innerB[i], innerB[j]); if (capStart) addQuad(faces, innerA[j], outerA[j], outerA[i], innerA[i]); if (capEnd) addQuad(faces, outerB[j], innerB[j], innerB[i], outerB[i]); }
+      mesh.parts.push(label);
+    }
+    function addOuterAnnulus(mesh, innerRadiusFn, outerRadiusFn, z, segments, flip = false) {
+      const { vertices, faces } = mesh, inner = [], outer = [];
+      for (let i = 0; i < segments; i++) { const theta = i / segments * TAU, cos = Math.cos(theta), sin = Math.sin(theta), ri = innerRadiusFn(theta, z), ro = outerRadiusFn(theta, z); inner.push(makeVertex(vertices, cos * ri, sin * ri, z)); outer.push(makeVertex(vertices, cos * ro, sin * ro, z)); }
+      for (let i = 0; i < segments; i++) { const j = (i + 1) % segments; if (flip) addQuad(faces, inner[j], inner[i], outer[i], outer[j]); else addQuad(faces, inner[i], inner[j], outer[j], outer[i]); }
+    }
+    function generatePulleyMesh(s) {
+      const teeth = Math.round(clamp(s.teeth, 8, 240)), samplesPerTooth = Math.round(clamp(s.samplesPerTooth, 8, 48)), segments = Math.max(96, teeth * samplesPerTooth), width = Math.max(s.beltWidth + 1, s.faceWidth || s.beltWidth), boreRadius = Math.max(.25, s.boreDiameter / 2), pitchDiameter = teeth * s.pitch / Math.PI, outsideDiameter = pitchDiameter - s.odOffset, outsideRadius = outsideDiameter / 2, rootRadius = outsideRadius - s.grooveDepth;
+      const hasLower = !!s.flangeEnabled, hasUpper = !!s.upperFlangeEnabled, flangeThickness = (hasLower || hasUpper) ? Math.max(.2, s.flangeThickness) : 0, lowerT = hasLower ? flangeThickness : 0, upperT = hasUpper ? flangeThickness : 0, flangeRadius = Math.max(outsideRadius + .2, (outsideDiameter + s.flangeExtra * 2) / 2);
+      const zFace0 = -width / 2, zFace1 = width / 2, zMin = zFace0 - lowerT, zMax = zFace1 + upperT, mesh = { vertices: [], faces: [], parts: [] }, toothProfile = buildHTDArcProfile({ ...s, teeth });
+      const profileRadius = theta => htd5mArcGrooveRadius(theta, { ...s, teeth }, toothProfile), flangeOuter = () => flangeRadius;
+      if (hasLower || hasUpper) {
+        const bodyCapStart = !hasLower, bodyCapEnd = !hasUpper;
+        if (hasLower) { addTube(mesh, boreRadius, flangeOuter, zMin, zFace0, segments, "lower square flange", true, false); addOuterAnnulus(mesh, profileRadius, flangeOuter, zFace0, segments, true); }
+        addTube(mesh, boreRadius, profileRadius, zFace0, zFace1, segments, "toothed pulley body", bodyCapStart, bodyCapEnd);
+        if (hasUpper) {
+          if (s.printFriendlyFlanges) { const upperOuter = (theta, z) => { const t = clamp((z - zFace1) / Math.max(1e-9, upperT), 0, 1); return profileRadius(theta) + (flangeRadius - profileRadius(theta)) * t }; addTube(mesh, boreRadius, upperOuter, zFace1, zMax, segments, "upper tapered flange", false, true); }
+          else { addTube(mesh, boreRadius, flangeOuter, zFace1, zMax, segments, "upper square flange", false, true); addOuterAnnulus(mesh, profileRadius, flangeOuter, zFace1, segments, false); }
+        }
+      } else addTube(mesh, boreRadius, profileRadius, zFace0, zFace1, segments, "toothed pulley body");
+      const bossExtension = Math.max(0, s.bossExtension), bossRadius = Math.max(boreRadius + .5, s.bossDiameter / 2); if (bossExtension > 0 && bossRadius < outsideRadius - .2) { const bossFn = () => bossRadius; addTube(mesh, boreRadius, bossFn, zMin - bossExtension, zMin, segments, "lower bore boss"); addTube(mesh, boreRadius, bossFn, zMax, zMax + bossExtension, segments, "upper bore boss"); }
+      return { ...mesh, stats: { teeth, segments, width, pitchDiameter, outsideDiameter, rootDiameter: rootRadius * 2, flangeDiameter: flangeRadius * 2, totalLength: width + lowerT + upperT + bossExtension * 2, maxFlangeOverhang: Math.max(0, flangeRadius - rootRadius), halfGrooveWidth: toothProfile.halfGrooveWidth, grooveTopWidth: toothProfile.grooveTopWidth, toothLandWidth: toothProfile.toothLandWidth, plungeRadius: toothProfile.plungeRadius, floorRadius: toothProfile.cornerRadius, arcAngles: toothProfile.alphaDeg.toFixed(1) + "° / " + toothProfile.betaDeg.toFixed(1) + "°" } };
+    }
+    function meshToAsciiStl(mesh, name = "pulley") { const lines = ["solid " + name]; for (const face of mesh.faces) { const a = mesh.vertices[face[0]], b = mesh.vertices[face[1]], c = mesh.vertices[face[2]], n = makeNormal(a, b, c); lines.push("  facet normal " + n[0].toExponential(6) + " " + n[1].toExponential(6) + " " + n[2].toExponential(6)); lines.push("    outer loop"); lines.push("      vertex " + a[0].toFixed(6) + " " + a[1].toFixed(6) + " " + a[2].toFixed(6)); lines.push("      vertex " + b[0].toFixed(6) + " " + b[1].toFixed(6) + " " + b[2].toFixed(6)); lines.push("      vertex " + c[0].toFixed(6) + " " + c[1].toFixed(6) + " " + c[2].toFixed(6)); lines.push("    endloop"); lines.push("  endfacet"); } lines.push("endsolid " + name); return lines.join("\n") }
+    function downloadText(filename, text) { const blob = new Blob([text], { type: "model/stl;charset=utf-8" }), url = URL.createObjectURL(blob), a = document.createElement("a"); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url) }
+    function createNumberField(def, container) { const [key, label, min, max, step, suffix] = def, wrapper = document.createElement("label"); wrapper.className = "field"; wrapper.innerHTML = `<span>${label}</span><span class="input-wrap"><input id="field-${key}" type="number" min="${min}" max="${max}" step="${step}" value="${state[key]}"><span class="suffix">${suffix}</span></span>`; container.appendChild(wrapper); const input = wrapper.querySelector("input"); input.addEventListener("input", () => { const raw = Number(input.value); state[key] = Number.isFinite(raw) ? raw : state[key]; render() }) }
+    function renderInputs() { const pulleyFields = document.getElementById("pulleyFields"), flangeFields = document.getElementById("flangeFields"); pulleyFieldDefs.forEach(def => createNumberField(def, pulleyFields)); flangeFieldDefs.forEach(def => createNumberField(def, flangeFields));[["flangeEnabled", "flangeEnabled"], ["upperFlangeEnabled", "upperFlangeEnabled"], ["printFriendlyFlanges", "printFriendlyFlanges"]].forEach(([id, key]) => { const el = document.getElementById(id); el.checked = state[key]; el.addEventListener("change", () => { state[key] = el.checked; render() }) }) }
+    function setText(id, value) { document.getElementById(id).textContent = value }
+    function renderPreview(stats) { const profile = buildHTDArcProfile(state), samples = Math.max(240, stats.teeth * 28), maxR = (state.flangeEnabled || state.upperFlangeEnabled) ? Math.max(stats.flangeDiameter / 2, stats.outsideDiameter / 2) : stats.outsideDiameter / 2, scale = 170 / Math.max(1, maxR * 2), cx = 110, cy = 110, pts = []; for (let i = 0; i < samples; i++) { const theta = i / samples * TAU, r = htd5mArcGrooveRadius(theta, state, profile); pts.push(cx + Math.cos(theta) * r * scale + "," + (cy + Math.sin(theta) * r * scale)) } const flangePreview = document.getElementById("flangePreview"); flangePreview.style.display = (state.flangeEnabled || state.upperFlangeEnabled) ? "block" : "none"; flangePreview.setAttribute("r", String(stats.flangeDiameter / 2 * scale)); document.getElementById("pulleyPreview").setAttribute("points", pts.join(" ")); document.getElementById("borePreview").setAttribute("r", String(state.boreDiameter / 2 * scale)) }
+    function renderDimensions(mesh) { const s = mesh.stats, rows = [["Teeth", s.teeth], ["Pitch circumference", mm(s.teeth * state.pitch)], ["Pitch diameter", mm(s.pitchDiameter)], ["Outside diameter", mm(s.outsideDiameter)], ["Root diameter", mm(s.rootDiameter)], ["Nominal belt width", mm(state.beltWidth)], ["Toothed face width", mm(s.width)], ["Belt side clearance", mm(s.width - state.beltWidth)], ["Groove top width", mm(s.grooveTopWidth)], ["Tooth crest width", mm(s.toothLandWidth)], ["Arc radii", "R" + round(s.plungeRadius, 2) + " / R" + round(s.floorRadius, 2)], ["Arc angles", s.arcAngles], ["Flange diameter", (state.flangeEnabled || state.upperFlangeEnabled) ? mm(s.flangeDiameter) : "None"], ["Max flange overhang", (state.flangeEnabled || state.upperFlangeEnabled) ? mm(s.maxFlangeOverhang) : "None"], ["Flange mode", (state.flangeEnabled || state.upperFlangeEnabled) ? ((state.flangeEnabled && state.upperFlangeEnabled ? "Double" : state.flangeEnabled ? "Lower only" : "Upper only") + " / lower square" + (state.upperFlangeEnabled ? (state.printFriendlyFlanges ? ", upper tapered" : ", upper square") : "")) : "None"], ["Total length", mm(s.totalLength)], ["Vertices", mesh.vertices.length.toLocaleString()], ["Triangles", mesh.faces.length.toLocaleString()]]; document.getElementById("dimensions").innerHTML = rows.map(([label, value]) => `<div class="dim-row"><dt>${label}</dt><dd>${value}</dd></div>`).join("") }
+    function renderWarnings(stats) { const warnings = []; if (state.teeth < 12) warnings.push("Very small tooth counts can have poor belt engagement and weak printed teeth."); if (state.boreDiameter >= stats.rootDiameter - 2) warnings.push("Bore is large relative to the root diameter. Leave more wall thickness or use a larger tooth count."); if (state.grooveDepth > 2.25) warnings.push("Groove depth is above the common HTD 5M range. Check belt fit before printing functional parts."); if (state.plungeRadius <= state.grooveDepth / 2) warnings.push("Plunge radius must be greater than half the groove depth for a valid circular plunge arc."); if (state.toothCrestWidth > 1.8) warnings.push("Pulley tooth crest is wide for HTD 5M. The belt may ride on the tooth tops instead of engaging the grooves."); if (state.toothCrestWidth < 1.0) warnings.push("Pulley tooth crest is very narrow. Printed teeth may be weak or sharp."); if (state.faceWidth < state.beltWidth + 1) warnings.push("Toothed face width is tight for the nominal belt width. Use at least belt width + 1 mm clearance."); if (state.bossExtension > 0 && state.bossDiameter >= stats.outsideDiameter) warnings.push("Boss diameter must stay below the pulley outside diameter; it has been ignored in the STL mesh."); if (state.upperFlangeEnabled && state.printFriendlyFlanges && state.flangeThickness < stats.maxFlangeOverhang) warnings.push("The upper flange taper is still steeper than 45°. Increase flange thickness to about " + mm(stats.maxFlangeOverhang) + " or enable supports."); if (state.upperFlangeEnabled && !state.printFriendlyFlanges) warnings.push("Square upper flanges can create unsupported shelves over the tooth grooves in FDM. Use supports, enable the upper taper, or print the top flange separately if your slicer warns."); if (!state.upperFlangeEnabled) warnings.push("Upper flange is off. Enable it if you need belt retention on both sides, or print a separate top flange/ring."); const box = document.getElementById("warningBox"), list = document.getElementById("warningList"); box.hidden = warnings.length === 0; list.innerHTML = warnings.map(w => `<li>${w}</li>`).join("") }
+    let currentMesh = null; function render() { currentMesh = generatePulleyMesh(state); const stats = currentMesh.stats; renderPreview(stats); renderDimensions(currentMesh); renderWarnings(stats); setText("previewPitchDiameter", mm(stats.pitchDiameter)); setText("previewOutsideDiameter", mm(stats.outsideDiameter)); setText("previewRootDiameter", mm(stats.rootDiameter)); setText("previewTriangles", (currentMesh.faces.length || 0).toLocaleString()) }
+    document.getElementById("exportStl").addEventListener("click", () => { const mesh = currentMesh || generatePulleyMesh(state), stats = mesh.stats, filename = `HTD_5M_${stats.teeth}T_${round(state.beltWidth, 0)}mm_belt_${round(stats.width, 1)}mm_face_bore_${round(state.boreDiameter, 0)}mm.stl`; downloadText(filename, meshToAsciiStl(mesh, filename.replace(/\.stl$/i, ""))) });
+    renderInputs(); render();
+  </script>
 </body>
+
 </html>
